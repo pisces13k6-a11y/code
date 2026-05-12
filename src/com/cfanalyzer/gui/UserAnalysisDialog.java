@@ -1,6 +1,5 @@
 package com.cfanalyzer.gui;
 
-import com.cfanalyzer.config.AppConfig;
 import com.cfanalyzer.model.Analysis;
 import com.cfanalyzer.model.User;
 import com.cfanalyzer.model.UserRating;
@@ -9,9 +8,9 @@ import com.cfanalyzer.service.RatingService;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Modal dialog showing detailed analysis for a specific user.

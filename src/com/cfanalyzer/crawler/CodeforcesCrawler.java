@@ -5,6 +5,7 @@ import com.cfanalyzer.dao.SubmissionDAO;
 import com.cfanalyzer.dao.UserDAO;
 import com.cfanalyzer.model.Submission;
 import com.cfanalyzer.model.User;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -29,6 +30,7 @@ public class CodeforcesCrawler {
      * Initialize headless ChromeDriver.
      */
     private void initDriver() {
+        WebDriverManager.chromedriver().setup();
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless");
         options.addArguments("--no-sandbox");

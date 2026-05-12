@@ -108,20 +108,6 @@ public class UserDAO {
     }
 
     /**
-     * Update user rating and max_rating.
-     */
-    public void updateRating(int userId, int rating, int maxRating) throws SQLException {
-        String sql = "UPDATE users SET rating = ?, max_rating = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, rating);
-            ps.setInt(2, maxRating);
-            ps.setInt(3, userId);
-            ps.executeUpdate();
-        }
-    }
-
-    /**
      * Delete a user by ID (cascades to submissions and analysis).
      */
     public boolean deleteUser(int userId) throws SQLException {
