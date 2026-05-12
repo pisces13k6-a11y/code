@@ -56,17 +56,37 @@ source /path/to/codeforces-analyzer/database/schema.sql;
 
 This creates the `codeforces_analyzer` database with all required tables and default config.
 
-### Step 4 – Download Required JAR Files
+### Step 4 – Build the Project
+
+#### Option A – Maven (recommended)
+
+Maven automatically downloads all dependencies. Requires Maven 3.6+ and Java 11+.
+
+```bash
+# Compile
+mvn compile
+
+# Package an executable fat JAR (includes all dependencies)
+# -DskipTests is used because no automated tests are configured in this project
+mvn package -DskipTests
+
+# Run the fat JAR
+java -jar target/codeforces-analyzer.jar
+```
+
+#### Option B – Eclipse (manual JARs)
 
 Place all JAR files in the `lib/` directory:
 
 | Library | Version | Download |
 |---------|---------|----------|
-| `mysql-connector-java` | 8.0.33 | [Maven Central](https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.33/) |
+| `mysql-connector-j` | 8.0.33 | [Maven Central](https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.33/) |
 | `selenium-java` | 4.15.0 | [Selenium HQ](https://www.selenium.dev/downloads/) |
+| `webdrivermanager` | 5.6.2 | [Maven Central](https://repo1.maven.org/maven2/io/github/bonigarcia/webdrivermanager/) |
 | `gson` | 2.10.1 | [Maven Central](https://repo1.maven.org/maven2/com/google/code/gson/gson/2.10.1/) |
 | `okhttp` | 4.11.0 | [Maven Central](https://repo1.maven.org/maven2/com/squareup/okhttp3/okhttp/4.11.0/) |
 | `okio` | 3.x | Required by OkHttp |
+| `slf4j-simple` | 2.0.9 | [Maven Central](https://repo1.maven.org/maven2/org/slf4j/slf4j-simple/2.0.9/) |
 
 > **Selenium** also requires its dependency JARs. Download the full zip from selenium.dev which includes all dependencies.
 
@@ -83,7 +103,9 @@ In Eclipse, right-click project → **Build Path → Configure Build Path → Ad
 
 ### Step 6 – Configure Database Connection
 
-Edit `src/com/cfanalyzer/config/DatabaseConfig.java`:
+The easiest way to configure the application is via the **Settings** tab in the GUI after launch.
+
+Alternatively, edit `src/com/cfanalyzer/config/DatabaseConfig.java` directly:
 
 ```java
 private static String host = "localhost";       // Your MySQL host
@@ -93,7 +115,7 @@ private static String username = "root";        // Your MySQL username
 private static String password = "yourpassword"; // Your MySQL password
 ```
 
-> You can also configure these at runtime via the **Settings** tab in the GUI.
+A template for all configurable values is provided in `config.properties.example`. Copy it to `config.properties` (which is gitignored) for local reference.
 
 ### Step 7 – Get Groq API Key
 
@@ -106,7 +128,14 @@ private static String password = "yourpassword"; // Your MySQL password
 
 ### Step 8 – Run the Application
 
-In Eclipse:
+**With Maven:**
+
+```bash
+mvn package -DskipTests
+java -jar target/codeforces-analyzer.jar
+```
+
+**With Eclipse:**
 - Right-click `src/com/cfanalyzer/Main.java` → **Run As → Java Application**
 
 ---

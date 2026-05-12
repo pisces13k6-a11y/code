@@ -1,0 +1,28 @@
+# ============================================================
+# Codeforces Analyzer – Configuration Template
+# ============================================================
+# Copy this file to config.properties and fill in your values.
+# config.properties is loaded at runtime when placed next to the
+# application JAR or on the classpath.
+#
+# NOTE: Never commit config.properties to version control.
+# ============================================================
+
+# ── Database (MySQL) ─────────────────────────────────────────
+db.host=localhost
+db.port=3306
+db.name=codeforces_analyzer
+db.username=root
+db.password=YOUR_MYSQL_PASSWORD
+
+# ── Groq AI API ──────────────────────────────────────────────
+# Obtain a free API key at https://console.groq.com
+groq.api.key=YOUR_GROQ_API_KEY
+# Available models: mixtral-8x7b-32768  |  llama-3.1-70b-versatile
+groq.model=mixtral-8x7b-32768
+
+# ── Crawler Settings ─────────────────────────────────────────
+# How often the scheduler automatically crawls all users (hours)
+crawl.interval.hours=24
+# Milliseconds to wait between individual page requests
+crawl.sleep.between.requests.ms=2000
