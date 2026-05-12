@@ -3,8 +3,12 @@ package com.cfanalyzer.dao;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ConfigDAO {
+    private static final Logger LOGGER = Logger.getLogger(ConfigDAO.class.getName());
+
     public String getValue(String key, String fallback) {
         String sql = "SELECT config_value FROM config WHERE config_key = ?";
         try (Connection c = DatabaseManager.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
@@ -14,7 +18,8 @@ public class ConfigDAO {
                     return rs.getString(1);
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Failed to load config for key: " + key, ex);
         }
         return fallback;
     }
@@ -25,7 +30,8 @@ public class ConfigDAO {
             ps.setString(1, key);
             ps.setString(2, value);
             ps.executeUpdate();
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Failed to save config for key: " + key, ex);
         }
     }
 }

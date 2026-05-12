@@ -5,8 +5,12 @@ import com.cfanalyzer.model.User;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class UserDAO {
+    private static final Logger LOGGER = Logger.getLogger(UserDAO.class.getName());
+
     public long addUser(String handle) throws SQLException {
         String sql = "INSERT INTO users(handle, active) VALUES (?, TRUE)";
         try (Connection c = DatabaseManager.getConnection(); PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -43,7 +47,8 @@ public class UserDAO {
                 if (crawled != null) u.setLastCrawledAt(crawled.toLocalDateTime());
                 users.add(u);
             }
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Failed to fetch users", ex);
         }
         return users;
     }
@@ -53,7 +58,8 @@ public class UserDAO {
         try (Connection c = DatabaseManager.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setLong(1, userId);
             ps.executeUpdate();
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Failed to update last crawled for user: " + userId, ex);
         }
     }
 }

@@ -8,8 +8,11 @@ import java.lang.reflect.Type;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AnalysisDAO {
+    private static final Logger LOGGER = Logger.getLogger(AnalysisDAO.class.getName());
     private final Gson gson = new Gson();
     private final Type listType = new TypeToken<List<String>>() {}.getType();
 
@@ -23,7 +26,8 @@ public class AnalysisDAO {
             ps.setDouble(5, analysis.getAiConfidence());
             ps.setString(6, analysis.getSummary());
             ps.executeUpdate();
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Failed to save analysis for submission: " + analysis.getSubmissionId(), ex);
         }
     }
 
@@ -47,7 +51,8 @@ public class AnalysisDAO {
                     out.add(a);
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Failed to fetch analyses for user: " + userId, ex);
         }
         return out;
     }

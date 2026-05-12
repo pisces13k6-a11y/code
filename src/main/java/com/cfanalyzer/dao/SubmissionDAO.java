@@ -5,8 +5,12 @@ import com.cfanalyzer.model.Submission;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class SubmissionDAO {
+    private static final Logger LOGGER = Logger.getLogger(SubmissionDAO.class.getName());
+
     public void saveIfNotExists(Submission s) {
         String sql = "INSERT IGNORE INTO submissions(user_id, cf_submission_id, contest_id, problem_id, problem_name, language, verdict, submitted_at, source_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection c = DatabaseManager.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
@@ -20,7 +24,8 @@ public class SubmissionDAO {
             if (s.getSubmittedAt() == null) ps.setNull(8, Types.TIMESTAMP); else ps.setTimestamp(8, Timestamp.valueOf(s.getSubmittedAt()));
             ps.setString(9, s.getSourceCode());
             ps.executeUpdate();
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Failed to save submission: " + s.getCfSubmissionId(), ex);
         }
     }
 
@@ -35,7 +40,8 @@ public class SubmissionDAO {
                     out.add(s);
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Failed to fetch submissions for user: " + userId, ex);
         }
         return out;
     }
@@ -50,7 +56,8 @@ public class SubmissionDAO {
                     out.add(map(rs));
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Failed to fetch unanalyzed submissions for user: " + userId, ex);
         }
         return out;
     }
@@ -64,7 +71,8 @@ public class SubmissionDAO {
                     return rs.getInt(1);
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Failed to count submissions for user: " + userId, ex);
         }
         return 0;
     }

@@ -26,7 +26,7 @@ public class CrawlerScheduler {
 
     public void start() {
         int interval = Integer.parseInt(configDAO.getValue("crawl_interval_hours", "24"));
-        scheduler.scheduleAtFixedRate(this::crawlAll, 15, interval, TimeUnit.HOURS);
+        scheduler.scheduleAtFixedRate(this::crawlAll, 1, interval, TimeUnit.HOURS);
     }
 
     public void crawlAll() {

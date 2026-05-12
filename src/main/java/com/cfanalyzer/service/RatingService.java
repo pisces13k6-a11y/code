@@ -26,8 +26,8 @@ public class RatingService {
 
         UserRating r = new UserRating();
         r.setUserId(userId);
-        r.setDsScore(Math.min(100, ds.size() * 8 + ds.size() * 2));
-        r.setAlgoScore(Math.min(100, alg.size() * 8 + alg.size() * 2));
+        r.setDsScore(Math.min(100, ds.size() * 10));
+        r.setAlgoScore(Math.min(100, alg.size() * 10));
         r.setAiUsagePercent(analyses.isEmpty() ? 0 : (100.0 * aiCount / analyses.size()));
         userRatingDAO.upsert(r);
         return r;

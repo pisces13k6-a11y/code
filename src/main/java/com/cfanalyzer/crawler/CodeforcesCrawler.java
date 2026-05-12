@@ -22,8 +22,12 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class CodeforcesCrawler {
+    private static final Logger LOGGER = Logger.getLogger(CodeforcesCrawler.class.getName());
+
     public List<Submission> crawlSubmissions(String handle, long userId) {
         List<Submission> submissions = new ArrayList<>();
         try {
@@ -65,7 +69,8 @@ public class CodeforcesCrawler {
                 s.setSourceCode(fetchSourceCode(handle, s.getContestId(), s.getCfSubmissionId()));
                 submissions.add(s);
             }
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Failed to crawl submissions for handle: " + handle, ex);
         }
         return submissions;
     }
@@ -91,7 +96,8 @@ public class CodeforcesCrawler {
                     return elements.get(0).getText();
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Failed to fetch source code for submission: " + submissionId, ex);
         } finally {
             if (driver != null) {
                 driver.quit();

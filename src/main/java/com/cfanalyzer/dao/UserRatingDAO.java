@@ -7,8 +7,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class UserRatingDAO {
+    private static final Logger LOGGER = Logger.getLogger(UserRatingDAO.class.getName());
+
     public void upsert(UserRating r) {
         String sql = "INSERT INTO user_ratings(user_id, ds_score, algo_score, ai_usage_percent) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE ds_score=VALUES(ds_score), algo_score=VALUES(algo_score), ai_usage_percent=VALUES(ai_usage_percent)";
         try (Connection c = DatabaseManager.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
@@ -17,7 +21,8 @@ public class UserRatingDAO {
             ps.setDouble(3, r.getAlgoScore());
             ps.setDouble(4, r.getAiUsagePercent());
             ps.executeUpdate();
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Failed to upsert user rating for user: " + r.getUserId(), ex);
         }
     }
 
@@ -33,7 +38,8 @@ public class UserRatingDAO {
                 r.setAiUsagePercent(rs.getDouble("ai_usage_percent"));
                 list.add(r);
             }
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Failed to fetch user rankings", ex);
         }
         return list;
     }
