@@ -57,11 +57,20 @@ public class CodeforcesCrawler {
             System.out.println("[INFO] " + now() + " Found " + submissions.size() + " new submissions for " + user.getUsername());
 
             for (Submission sub : submissions) {
+                if (Thread.interrupted()) {
+                    Thread.currentThread().interrupt();
+                    System.out.println("[INFO] " + now() + " Crawl interrupted for user " + user.getUsername());
+                    break;
+                }
                 try {
                     fetchSourceCode(sub);
                     submissionDAO.upsert(sub);
                     newCount++;
                     Thread.sleep(AppConfig.CRAWL_SLEEP_BETWEEN_REQUESTS_MS);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    System.out.println("[INFO] " + now() + " Crawl interrupted during sleep for user " + user.getUsername());
+                    break;
                 } catch (Exception e) {
                     System.err.println("[WARN] " + now() + " Failed to process submission " + sub.getId() + ": " + e.getMessage());
                 }

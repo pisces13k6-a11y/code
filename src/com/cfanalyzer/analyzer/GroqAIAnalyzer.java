@@ -55,7 +55,9 @@ public class GroqAIAnalyzer {
      */
     private String buildPrompt(String code) {
         // Truncate very long code to avoid token limits
-        String truncatedCode = code.length() > 8000 ? code.substring(0, 8000) + "\n... (truncated)" : code;
+        String truncatedCode = code.length() > AppConfig.GROQ_MAX_CODE_LENGTH
+                ? code.substring(0, AppConfig.GROQ_MAX_CODE_LENGTH) + "\n... (truncated)"
+                : code;
         return "Analyze the following competitive programming code and respond with ONLY a valid JSON object (no markdown, no explanation).\n\n" +
                "JSON format:\n" +
                "{\n" +

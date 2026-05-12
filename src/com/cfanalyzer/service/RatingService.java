@@ -110,7 +110,9 @@ public class RatingService {
         long aiCount = analyses.stream()
                 .filter(a -> a.getAiDetectionScore() >= AppConfig.AI_DETECTION_THRESHOLD)
                 .count();
-        return Math.round(((double) aiCount / analyses.size()) * 100.0 * 100.0) / 100.0;
+        // Compute percentage rounded to 2 decimal places
+        double percentage = ((double) aiCount / analyses.size()) * 100.0;
+        return Math.round(percentage * 100.0) / 100.0;
     }
 
     /**

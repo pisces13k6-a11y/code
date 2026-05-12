@@ -31,6 +31,9 @@ public class AppConfig {
     public static final int WINDOW_WIDTH = 1200;
     public static final int WINDOW_HEIGHT = 800;
 
+    // Code analysis
+    public static final int GROQ_MAX_CODE_LENGTH = 8000;
+
     // Scoring weights for data structures (complexity bonus)
     public static final String[] SIMPLE_DATA_STRUCTURES = {
         "array", "linked_list", "stack", "queue"

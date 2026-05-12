@@ -151,9 +151,16 @@ public class AnalysisPanel extends JPanel {
                     for (Submission s : subs) {
                         try {
                             Analysis a = analysisService.getAnalysisForSubmission(s.getId());
-                            String ds = a != null && a.getDataStructures() != null ? String.join(", ", a.getDataStructures()) : "-";
-                            String alg = a != null && a.getAlgorithms() != null ? String.join(", ", a.getAlgorithms()) : "-";
-                            String aiScore = a != null ? String.format("%.0f%%", a.getAiDetectionScore()) : "-";
+                            String ds = "-";
+                            String alg = "-";
+                            String aiScore = "-";
+                            if (a != null) {
+                                ds = (a.getDataStructures() != null && !a.getDataStructures().isEmpty())
+                                        ? String.join(", ", a.getDataStructures()) : "None";
+                                alg = (a.getAlgorithms() != null && !a.getAlgorithms().isEmpty())
+                                        ? String.join(", ", a.getAlgorithms()) : "None";
+                                aiScore = String.format("%.0f%%", a.getAiDetectionScore());
+                            }
                             tableModel.addRow(new Object[]{
                                     s.getId(), s.getProblemName(), s.getLanguage(), s.getVerdict(),
                                     s.getSubmissionDate(), ds, alg, aiScore
@@ -211,8 +218,12 @@ public class AnalysisPanel extends JPanel {
                     }
 
                     if (a != null) {
-                        dsLabel.setText("<html><b>Data Structures:</b> " + String.join(", ", a.getDataStructures()) + "</html>");
-                        algLabel.setText("<html><b>Algorithms:</b> " + String.join(", ", a.getAlgorithms()) + "</html>");
+                        String ds = (a.getDataStructures() != null && !a.getDataStructures().isEmpty())
+                                ? String.join(", ", a.getDataStructures()) : "None detected";
+                        String alg = (a.getAlgorithms() != null && !a.getAlgorithms().isEmpty())
+                                ? String.join(", ", a.getAlgorithms()) : "None detected";
+                        dsLabel.setText("<html><b>Data Structures:</b> " + ds + "</html>");
+                        algLabel.setText("<html><b>Algorithms:</b> " + alg + "</html>");
 
                         double aiScore = a.getAiDetectionScore();
                         String aiColor = aiScore >= 70 ? "red" : aiScore >= 40 ? "orange" : "green";

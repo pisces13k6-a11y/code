@@ -3,6 +3,7 @@ package com.cfanalyzer.dao;
 import com.cfanalyzer.config.DatabaseConfig;
 import com.cfanalyzer.model.Analysis;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
@@ -112,15 +113,27 @@ public class AnalysisDAO {
         a.setSubmissionId(rs.getLong("submission_id"));
 
         String dsJson = rs.getString("data_structures");
-        a.setDataStructures(dsJson != null ? GSON.fromJson(dsJson, STRING_LIST_TYPE) : new ArrayList<>());
+        try {
+            a.setDataStructures(dsJson != null ? GSON.fromJson(dsJson, STRING_LIST_TYPE) : new ArrayList<>());
+        } catch (JsonSyntaxException e) {
+            a.setDataStructures(new ArrayList<>());
+        }
 
         String algJson = rs.getString("algorithms");
-        a.setAlgorithms(algJson != null ? GSON.fromJson(algJson, STRING_LIST_TYPE) : new ArrayList<>());
+        try {
+            a.setAlgorithms(algJson != null ? GSON.fromJson(algJson, STRING_LIST_TYPE) : new ArrayList<>());
+        } catch (JsonSyntaxException e) {
+            a.setAlgorithms(new ArrayList<>());
+        }
 
         a.setAiDetectionScore(rs.getDouble("ai_detection_score"));
 
         String indJson = rs.getString("ai_indicators");
-        a.setAiIndicators(indJson != null ? GSON.fromJson(indJson, STRING_LIST_TYPE) : new ArrayList<>());
+        try {
+            a.setAiIndicators(indJson != null ? GSON.fromJson(indJson, STRING_LIST_TYPE) : new ArrayList<>());
+        } catch (JsonSyntaxException e) {
+            a.setAiIndicators(new ArrayList<>());
+        }
 
         a.setComplexityAnalysis(rs.getString("complexity_analysis"));
         a.setCodeQualityScore(rs.getDouble("code_quality_score"));
