@@ -80,7 +80,7 @@ Place all JAR files in the `lib/` directory:
 
 | Library | Version | Download |
 |---------|---------|----------|
-| `mysql-connector-j` | 9.7.0 | [Maven Central](https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.7.0/) |
+| `mysql-connector-j` | 9.3.0 | [Maven Central](https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.3.0/) |
 | `selenium-java` | 4.15.0 | [Selenium HQ](https://www.selenium.dev/downloads/) |
 | `webdrivermanager` | 6.3.4 | [Maven Central](https://repo1.maven.org/maven2/io/github/bonigarcia/webdrivermanager/) |
 | `gson` | 2.10.1 | [Maven Central](https://repo1.maven.org/maven2/com/google/code/gson/gson/2.10.1/) |
@@ -99,7 +99,7 @@ The crawler now uses **WebDriverManager** to download and manage the matching Ch
 
 The easiest way to configure the application is via the **Settings** tab in the GUI after launch.
 
-Alternatively, edit `src/com/cfanalyzer/config/DatabaseConfig.java` directly:
+Alternatively, edit `src/main/java/com/cfanalyzer/config/DatabaseConfig.java` directly:
 
 ```java
 private static String host = "localhost";       // Your MySQL host
@@ -128,7 +128,7 @@ java -jar target/codeforces-analyzer.jar
 ```
 
 **With Eclipse:**
-- Right-click `src/com/cfanalyzer/Main.java` → **Run As → Java Application**
+- Right-click `src/main/java/com/cfanalyzer/Main.java` → **Run As → Java Application**
 
 ---
 
@@ -169,7 +169,7 @@ Go to the **Settings** tab to:
 
 ```
 CodeforceAnalyzer/
-├── src/com/cfanalyzer/
+├── src/main/java/com/cfanalyzer/
 │   ├── Main.java                        # Application entry point
 │   ├── config/
 │   │   ├── DatabaseConfig.java          # DB connection management
@@ -237,7 +237,7 @@ CodeforceAnalyzer/
 | Chrome/WebDriver startup failed | Ensure Google Chrome is installed and can be launched on your machine |
 | Groq API errors | Verify API key is correct; check rate limits at console.groq.com |
 | No source code crawled | Codeforces may require login; some submissions are private |
-| ClassNotFoundException for MySQL | Add `mysql-connector-j-9.7.0.jar` to build path |
+| ClassNotFoundException for MySQL | Add `mysql-connector-j-9.3.0.jar` to build path |
 | Selenium NoSuchElementException | Codeforces HTML may have changed; update CSS selectors in CodeforcesCrawler |
 
 ---
