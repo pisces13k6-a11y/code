@@ -80,9 +80,9 @@ Place all JAR files in the `lib/` directory:
 
 | Library | Version | Download |
 |---------|---------|----------|
-| `mysql-connector-j` | 8.0.33 | [Maven Central](https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.33/) |
+| `mysql-connector-j` | 9.7.0 | [Maven Central](https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.7.0/) |
 | `selenium-java` | 4.15.0 | [Selenium HQ](https://www.selenium.dev/downloads/) |
-| `webdrivermanager` | 5.6.2 | [Maven Central](https://repo1.maven.org/maven2/io/github/bonigarcia/webdrivermanager/) |
+| `webdrivermanager` | 6.3.4 | [Maven Central](https://repo1.maven.org/maven2/io/github/bonigarcia/webdrivermanager/) |
 | `gson` | 2.10.1 | [Maven Central](https://repo1.maven.org/maven2/com/google/code/gson/gson/2.10.1/) |
 | `okhttp` | 4.11.0 | [Maven Central](https://repo1.maven.org/maven2/com/squareup/okhttp3/okhttp/4.11.0/) |
 | `okio` | 3.x | Required by OkHttp |

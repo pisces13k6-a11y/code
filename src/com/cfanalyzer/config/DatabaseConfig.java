@@ -51,7 +51,7 @@ public class DatabaseConfig {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
-            throw new SQLException("MySQL JDBC Driver not found. Please add mysql-connector-java.jar to lib/", e);
+            throw new SQLException("MySQL JDBC Driver not found. Please add mysql-connector-j.jar to lib/ or use Maven (mvn package).", e);
         }
         return DriverManager.getConnection(url, username, password);
     }
