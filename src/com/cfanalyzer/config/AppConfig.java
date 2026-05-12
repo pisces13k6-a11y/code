@@ -10,8 +10,6 @@ public class AppConfig {
 
     // Codeforces URLs
     public static final String CF_SUBMISSIONS_URL = "https://codeforces.com/submissions/";
-    public static final String CF_SUBMISSION_DETAIL_URL = "https://codeforces.com/contest/";
-
     // Groq API
     public static final String GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
     public static final String GROQ_MODEL = "mixtral-8x7b-32768";

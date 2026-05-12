@@ -24,7 +24,7 @@ A Java Swing application that analyzes Codeforces submissions to evaluate users'
 |-----------|---------|
 | Java | 8 or higher |
 | MySQL | 8.0 or higher |
-| ChromeDriver | Compatible with your installed Chrome version |
+| Google Chrome | Current stable version |
 | Eclipse IDE | 2020+ (recommended) |
 
 ---
@@ -86,20 +86,14 @@ Place all JAR files in the `lib/` directory:
 | `gson` | 2.10.1 | [Maven Central](https://repo1.maven.org/maven2/com/google/code/gson/gson/2.10.1/) |
 | `okhttp` | 4.11.0 | [Maven Central](https://repo1.maven.org/maven2/com/squareup/okhttp3/okhttp/4.11.0/) |
 | `okio` | 3.x | Required by OkHttp |
-| `slf4j-simple` | 2.0.9 | [Maven Central](https://repo1.maven.org/maven2/org/slf4j/slf4j-simple/2.0.9/) |
 
 > **Selenium** also requires its dependency JARs. Download the full zip from selenium.dev which includes all dependencies.
 
 In Eclipse, right-click project → **Build Path → Configure Build Path → Add JARs** → select all JARs from `lib/`.
 
-### Step 5 – Download ChromeDriver
+### Step 5 – Install Google Chrome
 
-1. Check your Chrome version: `chrome://version/`
-2. Download matching ChromeDriver from [chromedriver.chromium.org](https://chromedriver.chromium.org/downloads)
-3. Add ChromeDriver to your system PATH, **or** set `webdriver.chrome.driver` system property:
-   ```java
-   System.setProperty("webdriver.chrome.driver", "/path/to/chromedriver");
-   ```
+The crawler now uses **WebDriverManager** to download and manage the matching ChromeDriver automatically. You only need Google Chrome installed locally.
 
 ### Step 6 – Configure Database Connection
 
@@ -114,8 +108,6 @@ private static String database = "codeforces_analyzer";
 private static String username = "root";        // Your MySQL username
 private static String password = "yourpassword"; // Your MySQL password
 ```
-
-A template for all configurable values is provided in `config.properties.example`. Copy it to `config.properties` (which is gitignored) for local reference.
 
 ### Step 7 – Get Groq API Key
 
@@ -242,10 +234,10 @@ CodeforceAnalyzer/
 | Issue | Solution |
 |-------|----------|
 | Database connection failed | Check MySQL is running; verify host/port/credentials in Settings |
-| ChromeDriver not found | Ensure ChromeDriver is in PATH or set `webdriver.chrome.driver` property |
+| Chrome/WebDriver startup failed | Ensure Google Chrome is installed and can be launched on your machine |
 | Groq API errors | Verify API key is correct; check rate limits at console.groq.com |
 | No source code crawled | Codeforces may require login; some submissions are private |
-| ClassNotFoundException for MySQL | Add `mysql-connector-java-8.0.33.jar` to build path |
+| ClassNotFoundException for MySQL | Add `mysql-connector-j-9.7.0.jar` to build path |
 | Selenium NoSuchElementException | Codeforces HTML may have changed; update CSS selectors in CodeforcesCrawler |
 
 ---

@@ -143,19 +143,6 @@ public class SubmissionDAO {
         return 0;
     }
 
-    /**
-     * Get total submission count.
-     */
-    public int getTotalCount() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM submissions";
-        try (Connection conn = DatabaseConfig.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            if (rs.next()) return rs.getInt(1);
-        }
-        return 0;
-    }
-
     private Submission mapRow(ResultSet rs) throws SQLException {
         Submission sub = new Submission();
         sub.setId(rs.getLong("id"));
