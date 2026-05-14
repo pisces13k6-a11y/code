@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Codeforces Analyzer
 
 A Java Swing application that analyzes Codeforces submissions to evaluate users' data structure knowledge, algorithm proficiency, and detect AI-generated code.
@@ -245,3 +246,6 @@ CodeforceAnalyzer/
 ## License
 
 MIT License — see [LICENSE](LICENSE) for details.
+=======
+# code
+>>>>>>> branch 'main' of https://github.com/pisces13k6-a11y/code.git
