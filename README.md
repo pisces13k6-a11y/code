@@ -19,6 +19,15 @@ A Java Swing application that analyzes Codeforces submissions to evaluate users'
 
 ---
 
+## Recent Updates
+
+### Bug Fixes (v1.0.1)
+- ✅ **Dashboard Layout Fixed** – Corrected BorderLayout configuration for proper UI rendering
+- ✅ **Analysis Panel Error Handling** – Added comprehensive error messages and user guidance
+- ✅ **Null Pointer Prevention** – Added null checks for all collections and objects
+
+---
+
 ## System Requirements
 
 | Component | Version |
@@ -35,7 +44,7 @@ A Java Swing application that analyzes Codeforces submissions to evaluate users'
 ### Step 1 – Clone the Repository
 
 ```bash
-git clone https://github.com/anharble/codeforces-analyzer.git
+git clone https://github.com/pisces13k6-a11y/code.git
 ```
 
 ### Step 2 – Import into Eclipse
@@ -150,7 +159,8 @@ java -jar target/codeforces-analyzer.jar
 
 1. Go to the **Analysis** tab
 2. Select a user from the dropdown
-3. Click a submission to view:
+3. Click **Load Analysis** to fetch the user's submissions
+4. Click a submission to view:
    - Source code
    - Detected data structures
    - Detected algorithms
@@ -240,6 +250,8 @@ CodeforceAnalyzer/
 | No source code crawled | Codeforces may require login; some submissions are private |
 | ClassNotFoundException for MySQL | Add `mysql-connector-j-9.3.0.jar` to build path |
 | Selenium NoSuchElementException | Codeforces HTML may have changed; update CSS selectors in CodeforcesCrawler |
+| **Dashboard not displaying properly** | Dashboard has been fixed; please pull the latest version from `fix/dashboard-and-analysis` branch |
+| **Analysis panel shows no data** | Error handling improved; follow on-screen instructions to add users and run crawl first |
 
 ---
 
