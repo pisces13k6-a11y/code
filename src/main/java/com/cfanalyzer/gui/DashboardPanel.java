@@ -16,6 +16,7 @@ public class DashboardPanel extends JPanel {
     private final UserService userService;
     private final RatingService ratingService;
     private final DefaultTableModel tableModel;
+    private final JPanel statsPanel;
 
     public DashboardPanel(UserService userService, RatingService ratingService) {
         this.userService = userService;
@@ -34,7 +35,7 @@ public class DashboardPanel extends JPanel {
         titlePanel.add(refresh, BorderLayout.EAST);
 
         // Statistics panel
-        JPanel statsPanel = createStatsPanel();
+        this.statsPanel = createStatsPanel();
 
         // Rankings table
         tableModel = new DefaultTableModel(
@@ -53,7 +54,7 @@ public class DashboardPanel extends JPanel {
         table.getColumnModel().getColumn(5).setPreferredWidth(180);
 
         add(titlePanel, BorderLayout.NORTH);
-        add(statsPanel, BorderLayout.BEFORE_FIRST_LINE);
+        add(statsPanel, BorderLayout.AFTER_LINE_ENDS);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
         refresh.addActionListener(e -> reload());
@@ -90,49 +91,64 @@ public class DashboardPanel extends JPanel {
     }
 
     public void reload() {
-        List<UserRating> ratings = ratingService.getRankings();
-        Map<Long, User> userMap = new HashMap<>();
-        for (User u : userService.getAllUsers()) {
-            userMap.put(u.getId(), u);
-        }
-
-        // Calculate statistics
-        double totalDsScore = 0, totalAlgoScore = 0, totalAiUsage = 0;
-        for (UserRating r : ratings) {
-            totalDsScore += r.getDsScore();
-            totalAlgoScore += r.getAlgoScore();
-            totalAiUsage += r.getAiUsagePercent();
-        }
-        
-        int size = ratings.size();
-        double avgDsScore = size > 0 ? totalDsScore / size : 0;
-        double avgAlgoScore = size > 0 ? totalAlgoScore / size : 0;
-        double avgAiUsage = size > 0 ? totalAiUsage / size : 0;
-
-        // Update stats panel
-        Component[] components = ((JPanel) getComponent(1)).getComponents();
-        ((JLabel) components[0]).setText(String.format("Total Users: %d", size));
-        ((JLabel) components[1]).setText(String.format("Avg DS Score: %.1f", avgDsScore));
-        ((JLabel) components[2]).setText(String.format("Avg Algorithm Score: %.1f", avgAlgoScore));
-        ((JLabel) components[3]).setText(String.format("Avg AI Usage: %.1f%%", avgAiUsage));
-
-        // Update rankings table
-        tableModel.setRowCount(0);
-        int rank = 1;
-        for (UserRating r : ratings) {
-            User user = userMap.getOrDefault(r.getUserId(), new User());
-            if (user.getHandle() == null) user.setHandle("User #" + r.getUserId());
+        try {
+            List<UserRating> ratings = ratingService.getRankings();
             
-            String status = getEvaluationStatus(r.getDsScore(), r.getAlgoScore(), r.getAiUsagePercent());
+            if (ratings == null) {
+                ratings = List.of();
+            }
             
-            tableModel.addRow(new Object[]{
-                rank++,
-                user.getHandle(),
-                String.format("%.1f/100", r.getDsScore()),
-                String.format("%.1f/100", r.getAlgoScore()),
-                String.format("%.1f%%", r.getAiUsagePercent()),
-                status
-            });
+            Map<Long, User> userMap = new HashMap<>();
+            List<User> allUsers = userService.getAllUsers();
+            if (allUsers != null) {
+                for (User u : allUsers) {
+                    userMap.put(u.getId(), u);
+                }
+            }
+
+            // Calculate statistics
+            double totalDsScore = 0, totalAlgoScore = 0, totalAiUsage = 0;
+            for (UserRating r : ratings) {
+                totalDsScore += r.getDsScore();
+                totalAlgoScore += r.getAlgoScore();
+                totalAiUsage += r.getAiUsagePercent();
+            }
+            
+            int size = ratings.size();
+            double avgDsScore = size > 0 ? totalDsScore / size : 0;
+            double avgAlgoScore = size > 0 ? totalAlgoScore / size : 0;
+            double avgAiUsage = size > 0 ? totalAiUsage / size : 0;
+
+            // Update stats panel
+            Component[] components = statsPanel.getComponents();
+            if (components.length >= 4) {
+                ((JLabel) components[0]).setText(String.format("Total Users: %d", size));
+                ((JLabel) components[1]).setText(String.format("Avg DS Score: %.1f", avgDsScore));
+                ((JLabel) components[2]).setText(String.format("Avg Algorithm Score: %.1f", avgAlgoScore));
+                ((JLabel) components[3]).setText(String.format("Avg AI Usage: %.1f%%", avgAiUsage));
+            }
+
+            // Update rankings table
+            tableModel.setRowCount(0);
+            int rank = 1;
+            for (UserRating r : ratings) {
+                User user = userMap.getOrDefault(r.getUserId(), new User());
+                if (user.getHandle() == null) user.setHandle("User #" + r.getUserId());
+                
+                String status = getEvaluationStatus(r.getDsScore(), r.getAlgoScore(), r.getAiUsagePercent());
+                
+                tableModel.addRow(new Object[]{
+                    rank++,
+                    user.getHandle(),
+                    String.format("%.1f/100", r.getDsScore()),
+                    String.format("%.1f/100", r.getAlgoScore()),
+                    String.format("%.1f%%", r.getAiUsagePercent()),
+                    status
+                });
+            }
+        } catch (Exception e) {
+            System.err.println("Error loading dashboard data: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
