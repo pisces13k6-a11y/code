@@ -1,108 +1,145 @@
 package com.cfanalyzer.crawler;
 
 import com.cfanalyzer.config.AppConfig;
+import com.cfanalyzer.dao.SubmissionDAO;
 import com.cfanalyzer.model.Submission;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import io.github.bonigarcia.wdm.WebDriverManager;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.time.Instant;
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
+import java.time.ZoneOffset;
 import java.util.logging.Logger;
 
 public class CodeforcesCrawler {
-    private static final Logger LOGGER = Logger.getLogger(CodeforcesCrawler.class.getName());
+    private static final Logger logger = Logger.getLogger(CodeforcesCrawler.class.getName());
+    private final SubmissionDAO submissionDAO = new SubmissionDAO();
+    private final OkHttpClient httpClient = new OkHttpClient();
 
-    public List<Submission> crawlSubmissions(String handle, long userId) {
-        List<Submission> submissions = new ArrayList<>();
-        try {
-            URL url = new URL(AppConfig.CF_API_BASE + "/user.status?handle=" + handle + "&from=1&count=100");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setConnectTimeout(15000);
-            conn.setReadTimeout(15000);
-
-            StringBuilder response = new StringBuilder();
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    response.append(line);
-                }
-            }
-            JsonObject root = JsonParser.parseString(response.toString()).getAsJsonObject();
-            if (!"OK".equalsIgnoreCase(root.get("status").getAsString())) {
-                return submissions;
-            }
-            JsonArray result = root.getAsJsonArray("result");
-            for (JsonElement e : result) {
-                JsonObject obj = e.getAsJsonObject();
-                Submission s = new Submission();
-                s.setUserId(userId);
-                s.setCfSubmissionId(obj.get("id").getAsLong());
-                if (obj.has("contestId")) s.setContestId(obj.get("contestId").getAsInt());
-                JsonObject p = obj.getAsJsonObject("problem");
-                if (p != null) {
-                    if (p.has("index")) s.setProblemId(p.get("index").getAsString());
-                    if (p.has("name")) s.setProblemName(p.get("name").getAsString());
-                }
-                s.setLanguage(obj.has("programmingLanguage") ? obj.get("programmingLanguage").getAsString() : null);
-                s.setVerdict(obj.has("verdict") ? obj.get("verdict").getAsString() : null);
-                if (obj.has("creationTimeSeconds")) {
-                    long epoch = obj.get("creationTimeSeconds").getAsLong();
-                    s.setSubmittedAt(LocalDateTime.ofInstant(Instant.ofEpochSecond(epoch), ZoneId.systemDefault()));
-                }
-                s.setSourceCode(fetchSourceCode(handle, s.getContestId(), s.getCfSubmissionId()));
-                submissions.add(s);
-            }
-        } catch (Exception ex) {
-            LOGGER.log(Level.WARNING, "Failed to crawl submissions for handle: " + handle, ex);
+    /**
+     * ✅ NEW: Crawl user submissions via Codeforces HTTP API (JSON)
+     * NOT using Selenium anymore
+     */
+    public int crawlUserSubmissions(String handle, int limit, long userId) {
+        if (userId <= 0) {
+            logger.warning("Invalid userId: " + userId);
+            return 0;
         }
-        return submissions;
+        
+        if (handle == null || handle.isEmpty()) {
+            logger.warning("Invalid handle: " + handle);
+            return 0;
+        }
+        
+        try {
+            logger.info("=== CRAWL START ===");
+            logger.info("Crawling user: " + handle + " (ID: " + userId + ", limit: " + limit + ")");
+            
+            // Build API URL
+            String url = AppConfig.CF_API_BASE + "/user.status?handle=" + handle + "&from=1&count=" + limit;
+            logger.info("API URL: " + url);
+            
+            // Make HTTP GET request
+            Request request = new Request.Builder()
+                    .url(url)
+                    .addHeader("User-Agent", "Chrome/5.0")
+                    .build();
+            
+            Response response = httpClient.newCall(request).execute();
+            
+            if (!response.isSuccessful()) {
+                logger.warning("❌ API request failed: HTTP " + response.code());
+                return 0;
+            }
+            
+            String responseBody = response.body().string();
+            logger.info("✅ Response received: " + responseBody.length() + " bytes");
+            
+            // Parse JSON response
+            JsonObject jsonResponse = JsonParser.parseString(responseBody).getAsJsonObject();
+            
+            // Check status
+            if (!jsonResponse.get("status").getAsString().equals("OK")) {
+                String comment = jsonResponse.get("comment").getAsString();
+                logger.warning("❌ API error: " + comment);
+                return 0;
+            }
+            
+            // Get submissions array
+            JsonArray results = jsonResponse.getAsJsonArray("result");
+            logger.info("📊 Found " + results.size() + " total submissions");
+            
+            int crawledCount = 0;
+            int inserted = 0;
+            
+            // Process each submission
+            for (int i = 0; i < results.size() && crawledCount < limit; i++) {
+                try {
+                    JsonObject submissionJson = results.get(i).getAsJsonObject();
+                    
+                    // Extract fields
+                    long cfSubmissionId = submissionJson.get("id").getAsLong();
+                    int contestId = submissionJson.get("contestId").getAsInt();
+                    String problemId = submissionJson.getAsJsonObject("problem").get("index").getAsString();
+                    String problemName = submissionJson.getAsJsonObject("problem").get("name").getAsString();
+                    String language = submissionJson.get("programmingLanguage").getAsString();
+                    String verdict = submissionJson.has("verdict") ? submissionJson.get("verdict").getAsString() : "TESTING";
+                    long creationTimeSeconds = submissionJson.get("creationTimeSeconds").getAsLong();
+                    
+                    // Create Submission object
+                    Submission submission = new Submission();
+                    submission.setUserId(userId);
+                    submission.setUserHandle(handle);
+                    submission.setCfSubmissionId(cfSubmissionId);
+                    submission.setContestId(contestId);
+                    submission.setProblemId(problemId);
+                    submission.setProblemName(problemName);
+                    submission.setLanguage(language);
+                    submission.setVerdict(verdict);
+                    submission.setSourceCode("");  // API không cung cấp source code
+                    submission.setTags("competitive-programming");
+                    submission.setSubmittedAt(
+                        LocalDateTime.ofEpochSecond(creationTimeSeconds, 0, ZoneOffset.UTC)
+                    );
+                    submission.setCrawledAt(LocalDateTime.now());
+                    
+                    // Insert to database
+                    submissionDAO.insert(submission);
+                    inserted++;
+                    crawledCount++;
+                    
+                    logger.info("✅ [" + crawledCount + "] " + problemName + 
+                               " (" + language + ", " + verdict + ")");
+                    
+                } catch (Exception e) {
+                    logger.warning("⚠️  Error parsing submission " + (i+1) + ": " + e.getMessage());
+                }
+            }
+            
+            logger.info("=== CRAWL COMPLETE ===");
+            logger.info("Crawled: " + crawledCount + " submissions");
+            logger.info("Inserted: " + inserted + " submissions");
+            
+            return crawledCount;
+            
+        } catch (IOException e) {
+            logger.severe("❌ Network error: " + e.getMessage());
+            return 0;
+        } catch (Exception e) {
+            logger.severe("❌ Unexpected error: " + e.getMessage());
+            e.printStackTrace();
+            return 0;
+        }
     }
 
-    public String fetchSourceCode(String handle, Integer contestId, long submissionId) {
-        if (contestId == null) return "";
-        WebDriver driver = null;
-        try {
-            WebDriverManager.chromedriver().setup();
-            ChromeOptions options = new ChromeOptions();
-            options.addArguments("--headless=new", "--no-sandbox", "--disable-dev-shm-usage");
-            driver = new ChromeDriver(options);
-            String url = "https://codeforces.com/contest/" + contestId + "/submission/" + submissionId;
-            driver.get(url);
-            List<By> selectors = List.of(
-                    By.cssSelector("pre#program-source-text"),
-                    By.cssSelector("pre.program-source"),
-                    By.cssSelector("pre")
-            );
-            for (By selector : selectors) {
-                List<WebElement> elements = driver.findElements(selector);
-                if (!elements.isEmpty()) {
-                    return elements.get(0).getText();
-                }
-            }
-        } catch (Exception ex) {
-            LOGGER.log(Level.WARNING, "Failed to fetch source code for submission: " + submissionId, ex);
-        } finally {
-            if (driver != null) {
-                driver.quit();
-            }
-        }
-        return "";
+    /**
+     * Close resources (OkHttpClient auto-closes)
+     */
+    public void closeDriver() {
+        logger.info("Crawler resources closed");
     }
 }

@@ -20,63 +20,100 @@ public class UserManagementPanel extends JPanel {
         this.userService = userService;
         this.analysisService = analysisService;
         this.ratingService = ratingService;
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(10, 10));
+        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        // Title
+        JLabel titleLabel = new JLabel("User Management");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        titleLabel.setForeground(new Color(0, 51, 102));
+
+        // Input panel
+        JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
         JTextField handleInput = new JTextField(20);
         JButton addBtn = new JButton("Add User");
-        JButton crawlBtn = new JButton("Crawl Now");
-        JButton deleteBtn = new JButton("Delete User");
-        top.add(new JLabel("Codeforces Handle:"));
-        top.add(handleInput);
-        top.add(addBtn);
-        top.add(crawlBtn);
-        top.add(deleteBtn);
+        JButton crawlBtn = new JButton("Crawl Selected");
+        JButton deleteBtn = new JButton("Delete Selected");
+        
+        inputPanel.add(new JLabel("Codeforces Handle:"));
+        inputPanel.add(handleInput);
+        inputPanel.add(addBtn);
+        inputPanel.add(crawlBtn);
+        inputPanel.add(deleteBtn);
 
-        tableModel = new DefaultTableModel(new Object[]{"ID", "Handle", "Active", "Last Crawled"}, 0) {
+        // User table
+        tableModel = new DefaultTableModel(new Object[]{"ID", "Handle", "Active", "Last Crawled", "Status"}, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
         JTable table = new JTable(tableModel);
+        table.setRowHeight(25);
+        table.getColumnModel().getColumn(0).setPreferredWidth(50);
+        table.getColumnModel().getColumn(1).setPreferredWidth(150);
+        table.getColumnModel().getColumn(2).setPreferredWidth(80);
+        table.getColumnModel().getColumn(3).setPreferredWidth(150);
+        table.getColumnModel().getColumn(4).setPreferredWidth(150);
 
-        add(top, BorderLayout.NORTH);
+        // Add components
+        add(titleLabel, BorderLayout.NORTH);
+        add(inputPanel, BorderLayout.BEFORE_FIRST_LINE);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
+        // Event handlers
         addBtn.addActionListener(e -> {
             String handle = handleInput.getText().trim();
-            if (handle.isEmpty()) return;
+            if (handle.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please enter a handle");
+                return;
+            }
             try {
                 userService.addUser(handle);
                 handleInput.setText("");
                 refresh();
+                JOptionPane.showMessageDialog(this, "User added successfully");
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Add user failed: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this, "Add user failed: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
         crawlBtn.addActionListener(e -> {
             int row = table.getSelectedRow();
-            if (row < 0) return;
+            if (row < 0) {
+                JOptionPane.showMessageDialog(this, "Please select a user first");
+                return;
+            }
             long userId = ((Number) tableModel.getValueAt(row, 0)).longValue();
             String handle = String.valueOf(tableModel.getValueAt(row, 1));
             User user = new User();
             user.setId(userId);
             user.setHandle(handle);
-            int crawled = userService.crawlUser(user);
-            int analyzed = analysisService.analyzeUserSubmissions(userId);
-            ratingService.recomputeUserRating(userId);
-            refresh();
-            JOptionPane.showMessageDialog(this, "Crawled: " + crawled + " submissions, analyzed: " + analyzed);
+            
+            try {
+                int crawled = userService.crawlUser(user);
+                int analyzed = analysisService.analyzeUserSubmissions(userId);
+                ratingService.recomputeUserRating(userId);
+                refresh();
+                JOptionPane.showMessageDialog(this, "Crawled: " + crawled + " submissions\nAnalyzed: " + analyzed);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Crawl failed: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         deleteBtn.addActionListener(e -> {
             int row = table.getSelectedRow();
-            if (row < 0) return;
-            long userId = ((Number) tableModel.getValueAt(row, 0)).longValue();
-            try {
-                userService.deleteUser(userId);
-                refresh();
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Delete failed: " + ex.getMessage());
+            if (row < 0) {
+                JOptionPane.showMessageDialog(this, "Please select a user first");
+                return;
+            }
+            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this user?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                long userId = ((Number) tableModel.getValueAt(row, 0)).longValue();
+                try {
+                    userService.deleteUser(userId);
+                    refresh();
+                    JOptionPane.showMessageDialog(this, "User deleted successfully");
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Delete failed: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
@@ -87,7 +124,14 @@ public class UserManagementPanel extends JPanel {
         List<User> users = userService.getAllUsers();
         tableModel.setRowCount(0);
         for (User user : users) {
-            tableModel.addRow(new Object[]{user.getId(), user.getHandle(), user.isActive(), user.getLastCrawledAt()});
+            String status = user.isActive() ? "Active" : "Inactive";
+            tableModel.addRow(new Object[]{
+                user.getId(),
+                user.getHandle(),
+                user.isActive() ? "Yes" : "No",
+                user.getLastCrawledAt() != null ? user.getLastCrawledAt().toString().split("T")[0] : "Never",
+                status
+            });
         }
     }
 }

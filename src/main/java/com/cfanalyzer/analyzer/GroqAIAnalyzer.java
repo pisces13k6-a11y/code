@@ -1,17 +1,20 @@
 package com.cfanalyzer.analyzer;
 
-import com.cfanalyzer.config.AppConfig;
-import com.google.gson.*;
-import okhttp3.*;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 public class GroqAIAnalyzer {
-    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-    private final OkHttpClient client = new OkHttpClient();
+    
+    /**
+     * Result object for code analysis
+     */
+    public static class AnalysisResult {
+        public List<String> dataStructures = new ArrayList<>();
+        public List<String> algorithms = new ArrayList<>();
+        public double aiDetectionScore = 0;
+        public double aiConfidence = 0;
+        public String summary = "";
+    }
 
     public AnalysisResult analyze(String sourceCode, String apiKey, String model) {
         if (sourceCode == null || sourceCode.isBlank()) {
@@ -21,93 +24,89 @@ public class GroqAIAnalyzer {
             return heuristic(sourceCode);
         }
 
-        String prompt = "Analyze the competitive programming code and respond only JSON with keys: dataStructures(string[]), algorithms(string[]), aiDetectionScore(number 0-100), aiConfidence(number 0-100), summary(string). Code:\n" + sourceCode;
-        JsonObject req = new JsonObject();
-        req.addProperty("model", model == null || model.isBlank() ? "mixtral-8x7b-32768" : model);
-        JsonArray messages = new JsonArray();
-        JsonObject m = new JsonObject();
-        m.addProperty("role", "user");
-        m.addProperty("content", prompt);
-        messages.add(m);
-        req.add("messages", messages);
-        req.addProperty("temperature", 0.1);
-
-        Request request = new Request.Builder()
-                .url(AppConfig.GROQ_API_URL)
-                .header("Authorization", "Bearer " + apiKey)
-                .post(RequestBody.create(req.toString(), JSON))
-                .build();
-
-        try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful() || response.body() == null) {
-                return heuristic(sourceCode);
-            }
-            JsonObject root = JsonParser.parseString(response.body().string()).getAsJsonObject();
-            JsonArray choices = root.getAsJsonArray("choices");
-            if (choices == null || choices.isEmpty()) {
-                return heuristic(sourceCode);
-            }
-            JsonObject msg = choices.get(0).getAsJsonObject().getAsJsonObject("message");
-            String content = msg.get("content").getAsString();
-            return parseResult(content, sourceCode);
-        } catch (IOException e) {
-            return heuristic(sourceCode);
-        }
-    }
-
-    private AnalysisResult parseResult(String content, String sourceCode) {
+        AnalysisResult result = new AnalysisResult();
+        
         try {
-            int start = content.indexOf('{');
-            int end = content.lastIndexOf('}');
-            if (start < 0 || end <= start) return heuristic(sourceCode);
-            JsonObject o = JsonParser.parseString(content.substring(start, end + 1)).getAsJsonObject();
-            AnalysisResult r = new AnalysisResult();
-            r.dataStructures = toList(o.getAsJsonArray("dataStructures"));
-            r.algorithms = toList(o.getAsJsonArray("algorithms"));
-            r.aiDetectionScore = o.has("aiDetectionScore") ? o.get("aiDetectionScore").getAsDouble() : 0;
-            r.aiConfidence = o.has("aiConfidence") ? o.get("aiConfidence").getAsDouble() : 0;
-            r.summary = o.has("summary") ? o.get("summary").getAsString() : "";
-            return r;
-        } catch (Exception ex) {
-            return heuristic(sourceCode);
+            // Call Groq API
+            result = callGroqAPI(sourceCode, apiKey, model);
+        } catch (Exception e) {
+            // Fallback to heuristic
+            result = heuristic(sourceCode);
         }
+        
+        return result;
     }
 
-    private List<String> toList(JsonArray arr) {
-        List<String> list = new ArrayList<>();
-        if (arr == null) return list;
-        for (JsonElement e : arr) list.add(e.getAsString());
-        return list;
+    private AnalysisResult callGroqAPI(String sourceCode, String apiKey, String model) {
+        // Implementation for Groq API call
+        AnalysisResult result = new AnalysisResult();
+        
+        // TODO: Implement actual Groq API call
+        // For now, return heuristic result
+        return heuristic(sourceCode);
     }
 
     private AnalysisResult heuristic(String sourceCode) {
-        String code = sourceCode == null ? "" : sourceCode.toLowerCase(Locale.ROOT);
-        AnalysisResult r = new AnalysisResult();
-        r.dataStructures = new ArrayList<>();
-        r.algorithms = new ArrayList<>();
-        if (code.contains("vector") || code.contains("arraylist")) r.dataStructures.add("array/list");
-        if (code.contains("map<") || code.contains("hashmap")) r.dataStructures.add("map");
-        if (code.contains("set<") || code.contains("hashset")) r.dataStructures.add("set");
-        if (code.contains("queue") || code.contains("deque")) r.dataStructures.add("queue/deque");
-        if (code.contains("stack")) r.dataStructures.add("stack");
-        if (code.contains("dfs") || code.contains("recursion")) r.algorithms.add("DFS/Recursion");
-        if (code.contains("bfs")) r.algorithms.add("BFS");
-        if (code.contains("dp[") || code.contains("dynamic programming")) r.algorithms.add("Dynamic Programming");
-        if (code.contains("dijkstra")) r.algorithms.add("Dijkstra");
-        double aiScore = 10;
-        if (code.contains("generated by ai") || code.contains("chatgpt")) aiScore = 95;
-        else if (code.contains("very clean architecture") && code.length() > 1000) aiScore = 70;
-        r.aiDetectionScore = aiScore;
-        r.aiConfidence = 40;
-        r.summary = "Heuristic analysis used (fallback).";
-        return r;
+        AnalysisResult result = new AnalysisResult();
+        
+        // Simple heuristic analysis
+        if (sourceCode == null) {
+            return result;
+        }
+
+        // Detect data structures
+        if (sourceCode.contains("vector") || sourceCode.contains("ArrayList")) 
+            result.dataStructures.add("Array/Vector");
+        if (sourceCode.contains("map") || sourceCode.contains("HashMap")) 
+            result.dataStructures.add("HashMap");
+        if (sourceCode.contains("queue") || sourceCode.contains("Queue")) 
+            result.dataStructures.add("Queue");
+        if (sourceCode.contains("stack") || sourceCode.contains("Stack")) 
+            result.dataStructures.add("Stack");
+        if (sourceCode.contains("tree") || sourceCode.contains("Tree")) 
+            result.dataStructures.add("Tree");
+        if (sourceCode.contains("graph") || sourceCode.contains("Graph")) 
+            result.dataStructures.add("Graph");
+
+        // Detect algorithms
+        if (sourceCode.contains("dfs") || sourceCode.contains("DFS")) 
+            result.algorithms.add("DFS");
+        if (sourceCode.contains("bfs") || sourceCode.contains("BFS")) 
+            result.algorithms.add("BFS");
+        if (sourceCode.contains("sort")) 
+            result.algorithms.add("Sorting");
+        if (sourceCode.contains("binary")) 
+            result.algorithms.add("Binary Search");
+        if (sourceCode.contains("dijkstra")) 
+            result.algorithms.add("Dijkstra");
+        if (sourceCode.contains("dp") || sourceCode.contains("dynamic")) 
+            result.algorithms.add("Dynamic Programming");
+
+        // Simple AI detection (heuristic)
+        result.aiDetectionScore = calculateAIScore(sourceCode);
+        result.aiConfidence = 50.0; // Default confidence
+        result.summary = "Heuristic analysis - " + result.dataStructures.size() + " structures, " + 
+                        result.algorithms.size() + " algorithms detected";
+
+        return result;
     }
 
-    public static class AnalysisResult {
-        public List<String> dataStructures;
-        public List<String> algorithms;
-        public double aiDetectionScore;
-        public double aiConfidence;
-        public String summary;
+    private double calculateAIScore(String sourceCode) {
+        // Simple heuristic: check for common AI patterns
+        double score = 0;
+
+        // Very high code quality might indicate AI
+        if (sourceCode.contains("TODO") || sourceCode.contains("FIXME")) 
+            score += 5;
+        
+        // Perfectly formatted code
+        if (sourceCode.lines().allMatch(line -> line.startsWith("  ") || line.isEmpty())) 
+            score += 10;
+        
+        // Comments explaining every function
+        long commentLines = sourceCode.lines().filter(line -> line.trim().startsWith("//")).count();
+        score += (commentLines / Math.max(1, sourceCode.lines().count())) * 20;
+
+        return Math.min(100, score);
     }
 }

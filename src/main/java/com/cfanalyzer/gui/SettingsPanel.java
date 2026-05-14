@@ -21,6 +21,8 @@ public class SettingsPanel extends JPanel {
         JTextField user = new JTextField(DatabaseConfig.getUsername(), 18);
         JPasswordField pass = new JPasswordField(DatabaseConfig.getPassword(), 18);
         JTextField groqKey = new JTextField(configDAO.getValue("groq_api_key", ""), 24);
+        JTextField cfUsername = new JTextField(configDAO.getValue("cf_username", ""), 24);
+        JPasswordField cfPassword = new JPasswordField(configDAO.getValue("cf_password", ""), 24);
         JTextField interval = new JTextField(configDAO.getValue("crawl_interval_hours", "24"), 6);
 
         int y = 0;
@@ -30,6 +32,8 @@ public class SettingsPanel extends JPanel {
         addField("DB User", user, gbc, y++);
         addField("DB Password", pass, gbc, y++);
         addField("Groq API Key", groqKey, gbc, y++);
+        addField("Codeforces Username", cfUsername, gbc, y++);
+        addField("Codeforces Password (để crawl source code)", cfPassword, gbc, y++);
         addField("Crawl Interval (hours)", interval, gbc, y++);
 
         JButton save = new JButton("Save Settings");
@@ -45,6 +49,8 @@ public class SettingsPanel extends JPanel {
                 DatabaseConfig.setUsername(user.getText().trim());
                 DatabaseConfig.setPassword(new String(pass.getPassword()));
                 configDAO.putValue("groq_api_key", groqKey.getText().trim());
+                configDAO.putValue("cf_username", cfUsername.getText().trim());
+                configDAO.putValue("cf_password", new String(cfPassword.getPassword()));
                 configDAO.putValue("crawl_interval_hours", interval.getText().trim());
                 JOptionPane.showMessageDialog(this, "Saved. Restart app to apply scheduler interval changes.");
             } catch (Exception ex) {

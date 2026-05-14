@@ -7,9 +7,14 @@ import com.cfanalyzer.service.RatingService;
 import com.cfanalyzer.service.UserService;
 
 import javax.swing.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Main {
     public static void main(String[] args) {
+        Logger.getLogger("org.openqa.selenium.devtools").setLevel(Level.OFF);
+        Logger.getLogger("org.openqa.selenium.chromium").setLevel(Level.OFF);
+
         UserService userService = new UserService();
         AnalysisService analysisService = new AnalysisService();
         RatingService ratingService = new RatingService();
