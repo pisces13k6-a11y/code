@@ -65,7 +65,7 @@ public class AnalysisPanel extends JPanel {
 
         // Add components
         add(titleLabel, BorderLayout.NORTH);
-        add(controlPanel, BorderLayout.BEFORE_FIRST_LINE);
+        add(controlPanel, BorderLayout.AFTER_LINE_ENDS);
         add(scrollPane, BorderLayout.CENTER);
 
         // Event handlers
@@ -86,31 +86,88 @@ public class AnalysisPanel extends JPanel {
 
     private void reloadUsers() {
         userCombo.removeAllItems();
-        for (User u : userService.getAllUsers()) userCombo.addItem(u);
+        List<User> allUsers = userService.getAllUsers();
+        if (allUsers != null) {
+            for (User u : allUsers) {
+                userCombo.addItem(u);
+            }
+        }
     }
 
     private void loadAnalyses() {
-        User u = (User) userCombo.getSelectedItem();
-        if (u == null) {
-            JOptionPane.showMessageDialog(this, "No users available");
-            return;
-        }
-        current = analysisService.getUserAnalyses(u.getId());
-        tableModel.setRowCount(0);
-        
-        for (Analysis a : current) {
-            String date = a.getSubmittedAt() != null ? a.getSubmittedAt().toString().split("T")[0] : "N/A";
+        try {
+            User u = (User) userCombo.getSelectedItem();
+            if (u == null) {
+                JOptionPane.showMessageDialog(
+                    this, 
+                    "No users available!\n\n" +
+                    "Please go to 'User Management' tab and:\n" +
+                    "1. Add a Codeforces username\n" +
+                    "2. Click 'Crawl Now' to fetch submissions",
+                    "No Data",
+                    JOptionPane.INFORMATION_MESSAGE
+                );
+                return;
+            }
             
-            tableModel.addRow(new Object[]{
-                a.getProblemName() != null ? a.getProblemName() : "N/A",
-                a.getLanguage() != null ? a.getLanguage() : "N/A",
-                a.getVerdict() != null ? a.getVerdict() : "N/A",
-                String.join(", ", a.getDataStructures()),
-                String.join(", ", a.getAlgorithms()),
-                String.format("%.1f/100", a.getAiDetectionScore()),
-                String.format("%.1f%%", a.getAiConfidence()),
-                date
-            });
+            current = analysisService.getUserAnalyses(u.getId());
+            
+            if (current == null || current.isEmpty()) {
+                JOptionPane.showMessageDialog(
+                    this,
+                    "No analysis data found for user: " + u.getHandle() + "\n\n" +
+                    "Please:\n" +
+                    "1. Go to 'User Management' tab\n" +
+                    "2. Select this user and click 'Crawl Now'\n" +
+                    "3. Wait for submissions to be fetched and analyzed",
+                    "No Data",
+                    JOptionPane.INFORMATION_MESSAGE
+                );
+                tableModel.setRowCount(0);
+                return;
+            }
+            
+            tableModel.setRowCount(0);
+            
+            for (Analysis a : current) {
+                if (a == null) continue;
+                
+                String date = a.getSubmittedAt() != null ? a.getSubmittedAt().toString().split("T")[0] : "N/A";
+                String dataStructures = (a.getDataStructures() != null && !a.getDataStructures().isEmpty()) 
+                    ? String.join(", ", a.getDataStructures()) 
+                    : "N/A";
+                String algorithms = (a.getAlgorithms() != null && !a.getAlgorithms().isEmpty()) 
+                    ? String.join(", ", a.getAlgorithms()) 
+                    : "N/A";
+                
+                tableModel.addRow(new Object[]{
+                    a.getProblemName() != null ? a.getProblemName() : "N/A",
+                    a.getLanguage() != null ? a.getLanguage() : "N/A",
+                    a.getVerdict() != null ? a.getVerdict() : "N/A",
+                    dataStructures,
+                    algorithms,
+                    String.format("%.1f/100", a.getAiDetectionScore()),
+                    String.format("%.1f%%", a.getAiConfidence()),
+                    date
+                });
+            }
+            
+            JOptionPane.showMessageDialog(
+                this,
+                "Successfully loaded " + current.size() + " submissions for user: " + u.getHandle(),
+                "Load Complete",
+                JOptionPane.INFORMATION_MESSAGE
+            );
+            
+        } catch (Exception e) {
+            System.err.println("Error loading analyses: " + e.getMessage());
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(
+                this,
+                "Error loading analysis data:\n" + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE
+            );
         }
     }
 }
